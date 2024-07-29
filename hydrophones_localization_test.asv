@@ -32,7 +32,7 @@ taus_meas = tools.compute_taus_receivers_to_sources(receivers,sources,sound_spee
 delays_meas = tools.compute_receivers_delays(taus_meas);
 
 %% add noise to the delays
-delays_meas = delays_meas + 0.00001 * (2*rand(size(delays_meas))-1);
+delays_mease = delays_meas + 0.1 * (2*rand(size(delays_meas))-1);
 
 
 %% Variables Initialization
@@ -44,9 +44,7 @@ receivers_0 = [
     ] + pyramid;
 
 %% Add noise to initial guess
-receivers_0 = receivers_0 + 0.1 * (2*rand(size(receivers_0))-1); % geometry
-
-receivers_0 = receivers_0 + 5 * (2*rand(size(pyramid))-1); % pyramid position
+receivers_0 = receivers_0 + 0.1 * (2*rand(size(receivers_0))-1);
 
 %% Solving
 % None Linear constrainte (distance between hydrophones)

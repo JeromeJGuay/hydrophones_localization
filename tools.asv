@@ -3,7 +3,6 @@ classdef tools
         
         function delays = compute_receivers_delays(taus)
             % Compute the delays between sources-receivers travel times
-            %
             % Parameters
             % ----------
             %   taus: Nr x Ns
@@ -11,12 +10,10 @@ classdef tools
             % Returns
             % -------
             %   delays: (Ns x Nr x Nr)
-            Ns = size(taus, 2);
-            Nr = size(taus, 1);
-
-            delays = NaN(Ns,Nr,Nr);
+            Ns = size(taus,2)
+            delays = NaN(size(taus,2,1,1));
             for i_e = 1:Ns
-                delays(i_e,:,:) = taus(:, i_e) - taus(:, i_e).';
+                delays(i_e,:,:) = taus(i_e, :) - taus(i_e,:).';
             end
         end
 
