@@ -32,7 +32,7 @@ taus_meas = tools.compute_taus_receivers_to_sources(receivers,sources,sound_spee
 delays_meas = tools.compute_receivers_delays(taus_meas);
 
 %% add noise to the delays
-delays_meas = delays_meas + 0.00001 * (2*rand(size(delays_meas))-1);
+delays_meas = delays_meas + 0.0001 * (2*rand(size(delays_meas))-1);
 
 
 %% Variables Initialization
@@ -43,10 +43,11 @@ receivers_0 = [
      0.0  -0.5  -1.0; % receiver 4
     ] + pyramid;
 
-%% Add noise to initial guess
-receivers_0 = receivers_0 + 0.1 * (2*rand(size(receivers_0))-1); % geometry
+%% Add noise to initial guess geometry
+% receivers_0 = receivers_0 + 0.1 * (2*rand(size(receivers_0))-1);
 
-receivers_0 = receivers_0 + 5 * (2*rand(size(pyramid))-1); % pyramid position
+%% add position x,y offset
+% receivers_0 = receivers_0 + [5, 0, 0];
 
 %% Solving
 % None Linear constrainte (distance between hydrophones)
@@ -55,7 +56,7 @@ receivers_0 = receivers_0 + 5 * (2*rand(size(pyramid))-1); % pyramid position
 
 cfun = @(X) lowcost_functions.R(X, sources, sound_speed, delays_meas);
 
-delta_zr0 = -20:1:20;
+delta_zr0 = -1:.25:1;
 
 xsols = zeros(horzcat(length(delta_zr0), size(receivers)));
 
@@ -70,7 +71,7 @@ end
 
 %% Figures
 receivers_expanded = permute( ...
-    repmat(receivers_0, [1, 1, length(xsols)]), ...
+    repmat(receivers, [1, 1, length(xsols)]), ...
     [3 1 2]); 
 delta_r = sqrt(sum((xsols - receivers_expanded).^2, 3));
 
@@ -84,4 +85,4 @@ for i_r=1:4
 end
 
 %%
-% figures.pyramid_3d_solution(receivers_0, receivers, xsol)
+figures.pyramid_3d_solution(receivers, receivers_0, xsol)

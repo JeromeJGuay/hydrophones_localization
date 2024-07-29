@@ -13,7 +13,7 @@ classdef figures
             hold off
             set(gca,'ZDir','reverse')
             grid on
-            legend('Guess','', 'Real', '', 'Solution')
+            legend('Real','', 'Guess', '', 'Solution')
             view(3)
             daspect([1 1 1])
             shg
