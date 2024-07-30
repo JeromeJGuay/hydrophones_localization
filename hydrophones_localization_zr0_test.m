@@ -6,11 +6,9 @@ clc
 ADD_DELAYS_NOISE = false;
 ADD_GEOMETRY_NOISE = false;
 ADD_SOURCES_NOISE = false;
-SOUND_SPEED_0_OFFSET = -25; % m/s
+SOUND_SPEED_0_OFFSET = 0; % m/s
 
 RECEIVERS_0_OFFSET = [0 0 0]; % m
-
-UNKNOWN_SOUND_SPEED = true;
 
 %% Known parameters
 
@@ -43,7 +41,7 @@ delays_meas = tools.compute_receivers_delays(taus_meas);
 
 %% add noise to the delays
 if ADD_DELAYS_NOISE == true
-    delays_meas = delays_meas + 0.0001 * (2*rand(size(delays_meas))-1);
+    delays_meas = delays_meas + 0.000001 * (2*rand(size(delays_meas))-1);
 end
 
 %% Variables Initialization
@@ -54,12 +52,8 @@ receivers_0 = [
      0.0  -0.5  -1.0; % receiver 4
     ] + pyramid;
 
-sound_speed_0 = sound_speed;
 
-if SOUND_SPEED_0_OFFSET == true
-    sound_speed_0 = sound_speed + SOU
-    fprintf("sound_speed_0: %.3f\n", sound_speed_0)
-end
+sound_speed_0 = sound_speed + SOUND_SPEED_0_OFFSET;
 
 %% Add noise to initial guess geometry
 if ADD_GEOMETRY_NOISE == true
@@ -72,41 +66,28 @@ receivers_0 = receivers_0 + RECEIVERS_0_OFFSET;
 %% Solving for a range of vertical r0 position.
 
 fmincon_options = optimoptions('fmincon','display','off');
-delta_zr0 = 0:.25:5;
+
+delta_dtaus0 = 1e-6*(10.^(0:.05:4));
     
-xsols = zeros(horzcat(length(delta_zr0), size(receivers)));
+xsols = zeros(horzcat(length(delta_dtaus0), size(receivers)));
 
-sound_speeds = ones(size(delta_zr0,2), 1) * sound_speed;
-
-if UNKNOWN_SOUND_SPEED == true
+for i=1:length(delta_dtaus0)
     
-    cfun = @(X) lowcost_functions.RC(X, sources, delays_meas);
-    for i=1:length(delta_zr0)
-        r0 = receivers_0 + [0 0 1] * delta_zr0(i);
-        X0 = cat(1, r0(:), [sound_speed_0]) ; % vector form
-        X1 = fmincon(cfun, X0, [],[],[],[],[],[],[], fmincon_options); % vector form
-       
-        X1r = X1(1:end-1);
-        
-        sound_speeds(i) = X1(end);
+    dtaus0 = delays_meas + delta_dtaus0(i) * (2*rand(size(delays_meas))-1);
 
-        xsol = reshape(X1r, length(X1r)/3, 3);
-        
-        xsols(i,:,:) = xsol;
-    end
-else
-    cfun = @(X) lowcost_functions.R(X, sources, sound_speed_0, delays_meas);
-    for i=1:length(delta_zr0)
-        r0 = receivers_0 + [0 0 1] * delta_zr0(i);
-        X0 = r0(:); % vector form
-        
-        X1 = fmincon(cfun, X0,  [],[],[],[],[],[],[], fmincon_options); % vector form
-        
-        xsol = reshape(X1, length(X0)/3, 3);
-        
-        xsols(i,:,:) = xsol;
-    end
+    cfun = @(X) lowcost_functions.R(X, sources, sound_speed_0, dtaus0);
+
+    r0 = receivers_0;
+    
+    X0 = r0(:); % vector form
+    
+    X1 = fmincon(cfun, X0,  [],[],[],[],[],[],[], fmincon_options); % vector form
+    
+    xsol = reshape(X1, length(X0)/3, 3);
+    
+    xsols(i,:,:) = xsol;
 end
+
 
 
 
@@ -120,11 +101,12 @@ delta_r = sqrt(sum((xsols - receivers_expanded).^2, 3));
 figure()
 for i_r=1:4
     subplot(2,2,i_r)
-    plot(delta_zr0, delta_r(:, i_r))
+%     plot(delta_dtaus0, delta_r(:, i_r))
+    loglog(delta_dtaus0, delta_r(:, i_r))
     title(sprintf('Receiver %d', i_r))
-    xlabel("\Delta Z r0")
+    xlabel("\Delta dtaus0 s")
     ylabel("Position Error (m)")
-    xlim([delta_zr0(1) delta_zr0(end)])
+    xlim([delta_dtaus0(1) delta_dtaus0(end)])
 end
 
 
@@ -134,8 +116,8 @@ ddr_expanded = permute( ...
     repmat(ddr, [1, 1, length(xsols)]), ...
     [3 1 2]); 
 
-ddr0 = zeros(length(delta_zr0), length(receivers), length(receivers));
-for i=1:length(delta_zr0)
+ddr0 = zeros(length(delta_dtaus0), length(receivers), length(receivers));
+for i=1:length(delta_dtaus0)
     ddr0(i,:,:) = pdist2(squeeze(xsols(i,:,:)), squeeze(xsols(i,:,:)));
 end
 
@@ -147,18 +129,12 @@ for i_rr=1:length(index_ij)
     i=index_ij(i_rr,1);
     j=index_ij(i_rr,2);
     subplot(2,3,i_rr)
-    plot(delta_zr0, delta_ddr(:, i, j))
+    loglog(delta_dtaus0, delta_ddr(:, i, j))
     title(subtitles(i_rr,:))
-    xlabel("\Delta Z r0")
+    xlabel("\Delta dtaus0 s")
     ylabel("Distance Error (m)")
-    xlim([delta_zr0(1) delta_zr0(end)])
+    xlim([delta_dtaus0(1) delta_dtaus0(end)])
 end
 
-%% sound speeds
-
-figure()
-plot(delta_zr0, sound_speeds - sound_speed)
-xlabel("\Delta Z r0")
-ylabel("Sound speed Error (m/s)")
 %% Figure 3D solutions
-% figures.pyramid_3d_solution(receivers, receivers_0, xsol)
+figures.pyramid_3d_solution(receivers, receivers_0, xsol)
