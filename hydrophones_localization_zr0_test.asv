@@ -67,7 +67,7 @@ receivers_0 = receivers_0 + RECEIVERS_0_OFFSET;
 
 fmincon_options = optimoptions('fmincon','display','off');
 
-delta_dtaus0 = 1e-6*(10.^(0:.05:4));
+delta_dtaus0 = 1e-6*(10.^(0:1:4));
     
 xsols = zeros(horzcat(length(delta_dtaus0), size(receivers)));
 
@@ -81,22 +81,21 @@ for i=1:length(delta_dtaus0)
     
     X0 = r0(:); % vector form
     
-    X1 = fmincon(cfun, X0,  [],[],[],[],[],[],[], fmincon_options); % vector form
-    
+    X1 = fmincon(cfun, X0,  [],[],[],[],[],[],[], fmincon_options); %
+
     xsol = reshape(X1, length(X0)/3, 3);
     
     xsols(i,:,:) = xsol;
 end
 
 
-
-
 %% Figures Receivers position error
-receivers_expanded = permute( ...
-    repmat(receivers, [1, 1, length(xsols)]), ...
-    [3 1 2]); 
 
-delta_r = sqrt(sum((xsols - receivers_expanded).^2, 3));
+%permute(permute(xsols, [2 3 1]) - receivers, [3 1 2]);
+
+delta_r = sqrt(sum(( ...
+    permute(permute(xsols, [2 3 1]) - receivers, [3 1 2]) ...
+    ).^2, 3));
 
 figure()
 for i_r=1:4

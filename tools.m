@@ -20,6 +20,9 @@ classdef tools
             end
         end
 
+        function r = rand0(dim, norm)
+            r = 2 * norm * (rand(dim) - .5);
+        end
     end
 end
 
