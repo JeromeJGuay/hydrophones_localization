@@ -25,7 +25,7 @@ sources = [
     ];
 
 
-pyramid = [444 233 100];
+pyramid = [444 233 30];
 
 %% Synthetic Data
 receivers = [
@@ -66,13 +66,16 @@ receivers_0 = receivers_0 + RECEIVERS_0_OFFSET;
 %% Solving for a range of vertical r0 position.
 
 fmincon_options = optimoptions('fmincon','display','off');
-delta_zr0 = 0:1:10;
+delta_zr0 = 0:5:50;
     
 xsols = zeros(horzcat(length(delta_zr0), size(receivers)));
 
 cfun = @(X) lowcost_functions.R(X, sources, sound_speed_0, delays_meas);
 for i=1:length(delta_zr0)
-    r0 = receivers_0 + [0 0 1] * delta_zr0(i);
+    
+    fprintf('Iteration: %d\n', i)
+
+    r0 = receivers_0 + [1 0 0] * delta_zr0(i);
     
     X0 = r0(:); % vector form
     
@@ -131,4 +134,4 @@ for i_rr=1:length(index_ij)
 end
 
 %% Figure 3D solutions
-figures.pyramid_3d_solution(receivers, receivers_0, xsol)
+figures.pyramid_3d_solution(receivers+[.1 .1 .1], r0, xsol)

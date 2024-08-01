@@ -6,8 +6,8 @@ classdef figures
             figure
             hold on
            
-            figures.pyramid_3d_plot(real, 'b', labels);
-            figures.pyramid_3d_plot(guess,'k', labels);
+            figures.pyramid_3d_plot(real, 'k', labels);
+            figures.pyramid_3d_plot(guess,'b', labels);
             figures.pyramid_3d_plot(solution, 'r', labels);
 
             hold off
@@ -38,7 +38,7 @@ classdef figures
                 'FaceColor',color,'FaceAlpha',0.1)
             
             for i=1:size(receivers,2)
-               text(receivers(1,i),receivers(2,i),receivers(3,i),['   ' ...
+               text(receivers(i,1),receivers(i,2),receivers(i,3),['   ' ...
                 num2str(labels(i))],'HorizontalAlignment','left','FontSize',8);
             end    
         end

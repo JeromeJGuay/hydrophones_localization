@@ -16,7 +16,7 @@ sources = [
     381.35  138.994 5;
     ];
 
-pyramid = [444 233 30];
+pyramid = [444 233 100];
 
 receivers = [
     -1.0  -1.0   0.0; % receiver 1
@@ -39,9 +39,9 @@ receivers_0 = [
 
 
 %% Solving for a range of horizontal position.
-
+DZ = 0;
 DELTA_THETA = linspace(0, 2*pi, 12);
-DELTA_RADIUS = 1e-2*10.^(0:.1:4);
+DELTA_RADIUS = logspace(-1,2,10);
 
 rt_sols = zeros( ...
     horzcat( ...
@@ -61,7 +61,7 @@ for ri=1:length(DELTA_RADIUS)
     
         [dx, dy] = pol2cart(DELTA_THETA(ti), DELTA_RADIUS(ri));
             
-        r0 = receivers_0 + [dx dy 0];
+        r0 = receivers_0 + [dx dy DZ];
       
         rsol = solver.R(r0, sources_0, sound_speed_0, dtaus0);
        
@@ -82,11 +82,10 @@ mean_delta_r = squeeze(mean(delta_r, [3]));
 
 %% Figures
 figure()
-boxplot(mean_delta_r.', DELTA_RADIUS)
+boxplot(mean_delta_r.', round(DELTA_RADIUS*100)/100);
 
 ax = gca;
 ax.YAxis.Scale ="log";
-
 xlabel("\Delta Radius (m) ")
 ylabel("Position Error (m)")
 title("Error on guess horizontal position")
@@ -100,8 +99,25 @@ surf(X,Y,Z)
 ax = gca;
 ax.ZAxis.Scale ="log";
 
+xlabel("\Delta X (m) ")
+ylabel("\Delta Y (m) ")
+zlabel("Position Error (m)")
+
 colorbar
 set(gca,'ColorScale','log')
+
+%% Figures
+figure()
+surf(DELTA_RADIUS, DELTA_THETA, mean_delta_r.')
+ax = gca;
+xticks(logspace(-1,2,4));
+ax.XAxis.Scale ="log";
+ax.ZAxis.Scale ="log";
+colorbar
+set(gca,'ColorScale','log')
+xlabel("\Delta Radius (m) ")
+ylabel("\Delta Theta (m) ")
+zlabel("Position Error (m)")
 %%
 % figure()
 % for i_r=1:4
@@ -146,4 +162,9 @@ set(gca,'ColorScale','log')
 % end
 
 %% Figure 3D solutions
-%figures.pyramid_3d_solution(receivers, receivers_0, squeeze(xsols(end,:,:)))
+ri=10;
+ti=3;
+[dx, dy] = pol2cart(DELTA_THETA(ti), DELTA_RADIUS(ri));
+r0 = receivers_0 + [dx dy 0];
+
+figures.pyramid_3d_solution(receivers, r0, squeeze(rt_sols(ri,ti,:,:)))
